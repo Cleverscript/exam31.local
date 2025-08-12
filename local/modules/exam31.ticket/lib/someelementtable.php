@@ -40,6 +40,9 @@ class SomeElementTable extends Entity\DataManager
                 "(SELECT COUNT(1) CNT FROM `"  . SomeElementInfoTable::getTableName() . "` WHERE ELEMENT_ID = %s)",
                 ['ID']
             ),
+            new ExpressionField('ACTIVE_LANG', "IF(ACTIVE, '"
+                . Loc::getMessage('EXAM31_SOMEELEMENT_ACTIVE_LANG_YES') . "', '"
+                . Loc::getMessage('EXAM31_SOMEELEMENT_ACTIVE_LANG_NO') . "')"),
 		);
 	}
 

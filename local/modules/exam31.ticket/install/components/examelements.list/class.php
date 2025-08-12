@@ -4,6 +4,7 @@ use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Type\DateTime;
 use Bitrix\Main\Text\HtmlFilter;
+use Bitrix\Main\UI\PageNavigation;
 
 use Bitrix\Main\Error;
 use Bitrix\Main\Errorable;
@@ -11,6 +12,8 @@ use Bitrix\Main\ErrorCollection;
 use Bitrix\Main\ErrorableImplementation;
 
 use Exam31\Ticket\SomeElementTable;
+
+Loader::includeModule('exam31.ticket');
 
 class ExamElementsListComponent extends CBitrixComponent implements Errorable
 {
@@ -58,8 +61,20 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 			return;
 		}
 
-		$this->arResult['ITEMS'] = $this->getSomeElementList();
-		$this->arResult['grid'] = $this->prepareGrid($this->arResult['ITEMS']);
+        $request = Bitrix\Main\Context::getCurrent()->getRequest();
+        $page = 1;
+        if (isset($request[static::GRID_ID . '_nav'])) {
+            $page = (int) preg_replace('/[^0-9]/', '', $request[static::GRID_ID . '_nav']);
+        }
+
+        // Get grid options
+        $gridOptions = new Bitrix\Main\Grid\Options(static::GRID_ID);
+        $navParams = $gridOptions->GetNavParams();
+
+        $limit = $navParams['nPageSize'];
+
+		$this->arResult['ITEMS'] = $this->getSomeElementList($page, $limit);
+		$this->arResult['grid'] = $this->prepareGrid($this->arResult['ITEMS'], $limit);
 
 		$this->includeComponentTemplate();
 
@@ -67,18 +82,38 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 		$APPLICATION->SetTitle(Loc::getMessage('EXAM31_ELEMENTS_LIST_PAGE_TITLE'));
 	}
 
-	protected function getSomeElementList(): array
+	protected function getSomeElementList(int $page = 1, int $limit = 10): array
 	{
-		//Демо-данные для грида
-		$items = [
-			['ID' => 1, 'DATE_MODIFY' => new DateTime(), 'TITLE' => 'TITLE 1', 'TEXT' => 'TEXT 1', 'ACTIVE' => 1],
-			['ID' => 2, 'DATE_MODIFY' => new DateTime(), 'TITLE' => 'TITLE <script>alert("2 !!!")</script>', 'TEXT' => 'TEXT 2', 'ACTIVE' => 1],
-			['ID' => 3, 'DATE_MODIFY' => new DateTime(), 'TITLE' => 'TITLE 3', 'TEXT' => 'TEXT 3', 'ACTIVE' => 0],
-		];
+        $offset = $limit * ($page - 1);
+
+        $query = SomeElementTable::query()
+            ->where('ACTIVE', true)
+            ->addOrder('ID', 'ASC')
+            ->setSelect(['ID', 'DATE_MODIFY', 'TITLE', 'TEXT', 'CNT_INFO', 'ACTIVE_LANG'])
+            ->setLimit($limit)
+            ->setOffset($offset);
+
+        $collection = $query->exec()
+            ->fetchCollection();
+
+        $items = [];
+
+        foreach ($collection as $el) {
+            $items[] = [
+                'ID' => $el->get('ID'),
+                'DATE_MODIFY' => $el->get('DATE_MODIFY'),
+                'TITLE' => $el->get('TITLE'),
+                'TEXT' => $el->get('TEXT'),
+                'ACTIVE' => $el->get('ACTIVE_LANG'),
+                'CNT_INFO' => $el->get('CNT_INFO'),
+            ];
+        }
+
 		$preparedItems = [];
 		foreach ($items as $item)
 		{
 			$item['DETAIL_URL'] = $this->getDetailPageUrl($item['ID']);
+			$item['INFO_URL'] = $this->getDetailPageUrl($item['ID']);
 			$item['DATE_MODIFY'] = $item['DATE_MODIFY'] instanceof DateTime
 				? $item['DATE_MODIFY']->toString()
 				: null;
@@ -88,7 +123,25 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 		return $preparedItems;
 	}
 
-	protected function prepareGrid($items): array
+    protected function totalRowsCount()
+    {
+        return SomeElementTable::query()
+            ->where('ACTIVE', 'Y')
+            ->exec()
+            ->getSelectedRowsCount();
+    }
+
+    protected function getNavigation($limit)
+    {
+        // Page navigation
+        $nav = new PageNavigation(static::GRID_ID . '_nav');
+        $nav->allowAllRecords(false)->setPageSize($limit)->initFromUri();
+        $nav->setRecordCount($this->totalRowsCount());
+
+        return $nav;
+    }
+
+	protected function prepareGrid($items, $limit): array
 	{
 		return [
 			'GRID_ID' => static::GRID_ID,
@@ -100,6 +153,14 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 			'AJAX_MODE' => 'Y',
 			'AJAX_OPTION_JUMP' => 'N',
 			'AJAX_OPTION_HISTORY' => 'N',
+            'NAV_OBJECT' => $this->getNavigation($limit),
+            "SHOW_PAGESIZE" => true,
+            'PAGE_SIZES' => [
+                ['NAME' => '10', 'VALUE' => '10'],
+                ['NAME' => '20', 'VALUE' => '20'],
+                ['NAME' => '50', 'VALUE' => '50'],
+                ['NAME' => '100', 'VALUE' => '100']
+            ],
 		];
 	}
 
@@ -113,6 +174,7 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 			['id' => 'TITLE', 'default' => true, 'name' => $fieldsLabel['TITLE'] ?? 'TITLE'],
 			['id' => 'TEXT', 'default' => true, 'name' => $fieldsLabel['TEXT'] ?? 'TEXT'],
 			['id' => 'DETAIL', 'default' => true, 'name' => Loc::getMessage('EXAM31_ELEMENTS_LIST_GRIG_COLUMN_DETAIL_NAME')],
+			['id' => 'INFO', 'default' => true, 'name' => Loc::getMessage('EXAM31_ELEMENTS_LIST_GRIG_COLUMN_INFO_NAME')],
 		];
 	}
 	protected function getGridRows(array $items): array
@@ -134,6 +196,7 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 					'TEXT' => $item["TEXT"],
 					'ACTIVE' => $item["ACTIVE"],
 					'DETAIL' => $this->getDetailHTMLLink($item["DETAIL_URL"]),
+					'INFO' => $this->getInfoHTMLLink($item["INFO_URL"], $item["CNT_INFO"]),
 				]
 			];
 		}
@@ -144,8 +207,16 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 	{
 		return str_replace('#ELEMENT_ID#', $id, $this->arParams['DETAIL_PAGE_URL']);
 	}
+    protected function getInfoPageUrl(int $id): string
+    {
+        return str_replace('#ELEMENT_ID#', $id, $this->arParams['DETAIL_PAGE_URL']);
+    }
 	protected function getDetailHTMLLink(string $detail_url): string
 	{
 		return "<a href=\"" . $detail_url . "\">" . Loc::getMessage('EXAM31_ELEMENTS_LIST_GRIG_COLUMN_DETAIL_NAME') . "</a>";
 	}
+    protected function getInfoHTMLLink(string $detail_url, $cnt): string
+    {
+        return "<a href=\"" . $detail_url . "\">" . Loc::getMessage('EXAM31_ELEMENTS_LIST_GRIG_COLUMN_INFO_NAME', ['#CNT#', $cnt]) . "</a>";
+    }
 }
