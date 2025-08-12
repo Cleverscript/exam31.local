@@ -2,8 +2,11 @@
 namespace Exam31\Ticket;
 
 use Bitrix\Main\Entity;
+use Bitrix\Main\ORM\Fields\Relations\Reference;
+use Bitrix\Main\ORM\Query\Join;
 use Bitrix\Main\Type\DateTime;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\Entity\ExpressionField;
 
 class SomeElementTable extends Entity\DataManager
 {
@@ -18,6 +21,8 @@ class SomeElementTable extends Entity\DataManager
 				->configurePrimary()
 				->configureAutocomplete(),
 			(new Entity\BooleanField('ACTIVE'))
+                ->configureValues(0, 1)
+                ->configureDefaultValue(1)
 				->configureRequired(),
 			(new Entity\DatetimeField('DATE_MODIFY'))
 				->configureRequired()
@@ -25,6 +30,16 @@ class SomeElementTable extends Entity\DataManager
 			(new Entity\StringField('TITLE'))
 				->configureRequired(),
 			new Entity\TextField('TEXT'),
+            (new Reference(
+                "INFO",
+                SomeElementInfoTable::class,
+                Join::on("this.ID", "ref.ELEMENT_ID")
+            ))->configureJoinType('left'),
+            new ExpressionField(
+                'CNT_INFO',
+                "(SELECT COUNT(1) CNT FROM `"  . SomeElementInfoTable::getTableName() . "` WHERE ELEMENT_ID = %s)",
+                ['ID']
+            ),
 		);
 	}
 

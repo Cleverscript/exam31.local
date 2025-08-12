@@ -11,6 +11,7 @@ use Bitrix\Main\UrlRewriter;
 use Bitrix\Main\SystemException;
 
 use Exam31\Ticket\SomeElementTable;
+use Exam31\Ticket\SomeElementInfoTable;
 
 Loc::loadMessages(__FILE__);
 
@@ -80,7 +81,7 @@ class exam31_ticket extends CModule
 				$this->InstallUrlRewriterRuls();
 			}
 		}
-		catch (Throwable $t)
+		catch (\Throwable $t)
 		{
 			global $APPLICATION;
 			$APPLICATION->throwException($t->getMessage());
@@ -103,7 +104,7 @@ class exam31_ticket extends CModule
 
 			ModuleManager::unRegisterModule($this->MODULE_ID);
 		}
-		catch (Throwable $t)
+		catch (\Throwable $t)
 		{
 			global $APPLICATION;
 			$APPLICATION->throwException($t->getMessage());
@@ -127,7 +128,44 @@ class exam31_ticket extends CModule
 		if (!$dbConnection->isTableExists($tableName))
 		{
 			$entity->createDbTable();
+
+            $items = [];
+
+            for ($i=1; $i<=100; $i++) {
+                $items[] = [
+                    'TITLE' => Loc::getMessage('EXAM31_ELEMENT_TITLE_FIELD_LABEL', ['#NUM#' => $i]),
+                    'TEXT' => Loc::getMessage('EXAM31_ELEMENT_DESC_FIELD_LABEL', ['#NUM#' => $i])
+                ];
+            }
+
+            $addResult = SomeElementTable::addMulti($items, true);
+
+            if (!$addResult->isSuccess()) {
+                throw new SystemException(implode(',', $addResult->getErrorMessages()));
+            }
 		}
+
+        $entity = SomeElementInfoTable::getEntity();
+        $tableName = SomeElementInfoTable::getTableName();
+        if (!$dbConnection->isTableExists($tableName))
+        {
+            $entity->createDbTable();
+
+            $items = [];
+
+            for ($i=1; $i<=20; $i++) {
+                $items[] = [
+                    'TITLE' => Loc::getMessage('EXAM31_ELEMENTINFO_TITLE_FIELD_LABEL', ['#NUM#' => $i]),
+                    'ELEMENT_ID' => rand(1, 5)
+                ];
+            }
+
+            $addResult = SomeElementInfoTable::addMulti($items, true);
+
+            if (!$addResult->isSuccess()) {
+                throw new SystemException(implode(',', $addResult->getErrorMessages()));
+            }
+        }
 
 		return true;
 	}
@@ -146,6 +184,12 @@ class exam31_ticket extends CModule
 		{
 			$dbConnection->dropTable($tableName);
 		}
+
+        $entity = SomeElementInfoTable::getEntity();
+        $tableName = SomeElementInfoTable::getTableName();
+        if ($dbConnection->isTableExists($tableName)) {
+            $dbConnection->dropTable($tableName);
+        }
 
 		return true;
 	}

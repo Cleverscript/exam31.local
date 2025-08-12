@@ -3,3 +3,5 @@
 *.zip
 *.txt
 /bitrix
+/test
+/local/php_interface
