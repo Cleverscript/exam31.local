@@ -21,6 +21,8 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 	protected const DEFAULT_PAGE_SIZE = 20;
 	protected const GRID_ID = 'EXAM31_GRID_ELEMENT';
 
+    protected static $totalRowsCount;
+
 	public function __construct($component = null)
 	{
 		parent::__construct($component);
@@ -125,10 +127,14 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 
     protected function totalRowsCount()
     {
-        return SomeElementTable::query()
-            ->where('ACTIVE', 'Y')
-            ->exec()
-            ->getSelectedRowsCount();
+        if (!static::$totalRowsCount) {
+            static::$totalRowsCount = SomeElementTable::query()
+                ->where('ACTIVE', true)
+                ->exec()
+                ->getSelectedRowsCount();
+        }
+
+        return static::$totalRowsCount;
     }
 
     protected function getNavigation($limit)
@@ -147,7 +153,7 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 			'GRID_ID' => static::GRID_ID,
 			'COLUMNS' => $this->getGridColums(),
 			'ROWS' => $this->getGridRows($items),
-			'TOTAL_ROWS_COUNT' => count($items),
+			'TOTAL_ROWS_COUNT' => $this->totalRowsCount(),
 			'SHOW_ROW_CHECKBOXES' => false,
 			'SHOW_SELECTED_COUNTER' => false,
 			'AJAX_MODE' => 'Y',
