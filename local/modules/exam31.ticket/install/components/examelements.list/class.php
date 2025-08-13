@@ -255,7 +255,36 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 					'ACTIVE' => $item["ACTIVE"],
 					'DETAIL' => $this->getDetailHTMLLink($item["DETAIL_URL"]),
 					'INFO' => $this->getInfoHTMLLink($item["INFO_URL"], $item["CNT_INFO"]),
-				]
+				],
+                'actions' => [
+                    [
+                        'text' => Loc::getMessage('EXAM31_ELEMENTS_LIST_GRIG_COLUMN_DETAIL_NAME'),
+                        'default' => true,
+                        'onclick' => "BX.SidePanel.Instance.open('{$item["DETAIL_URL"]}', {
+                            allowChangeHistory: true,
+                            animationDuration: 100,
+                            width: 1100,
+                            cacheable: true,
+                            autoFocus: true,
+                        })",
+                    ],
+                    [
+                        'text' => Loc::getMessage('EXAM31_ELEMENTS_LIST_GRIG_COLUMN_INFO_NAME'),
+                        'default' => true,
+                        'onclick' => "BX.SidePanel.Instance.open('{$item["INFO_URL"]}', {
+                            allowChangeHistory: true,
+                            animationDuration: 100,
+                            width: 1100,
+                            cacheable: true,
+                            autoFocus: true,
+                            label: {
+                                text: 'Моя этикетка',
+                                color: '#FFFFFF',
+                                bgColor: '#2FC6F6',
+                            }
+                        })",
+                    ],
+                ]
 			];
 		}
 		return $rows;
