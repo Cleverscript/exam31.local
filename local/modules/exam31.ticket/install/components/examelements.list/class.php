@@ -223,6 +223,6 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 	}
     protected function getInfoHTMLLink(string $detail_url, $cnt): string
     {
-        return "<a href=\"" . $detail_url . "\">" . Loc::getMessage('EXAM31_ELEMENTS_LIST_GRIG_COLUMN_INFO_NAME', ['#CNT#', $cnt]) . "</a>";
+        return "<a href=\"" . $detail_url . "\">" . Loc::getMessage('EXAM31_ELEMENTS_LIST_GRIG_COLUMN_INFO_NAME_VALUE', ['#CNT#' => $cnt]) . "</a>";
     }
 }
