@@ -104,8 +104,8 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
             $items[] = [
                 'ID' => $el->get('ID'),
                 'DATE_MODIFY' => $el->get('DATE_MODIFY'),
-                'TITLE' => $el->get('TITLE'),
-                'TEXT' => $el->get('TEXT'),
+                'TITLE' => HtmlFilter::encode($el->get('TITLE')),
+                'TEXT' => HtmlFilter::encode($el->get('TEXT')),
                 'ACTIVE' => $el->get('ACTIVE_LANG'),
                 'CNT_INFO' => $el->get('CNT_INFO'),
             ];
