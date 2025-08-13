@@ -5,6 +5,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Type\DateTime;
 use Bitrix\Main\Text\HtmlFilter;
 use Bitrix\Main\UI\PageNavigation;
+use Bitrix\UI\Toolbar\Facade\Toolbar;
 
 use Bitrix\Main\Error;
 use Bitrix\Main\Errorable;
@@ -14,6 +15,7 @@ use Bitrix\Main\ErrorableImplementation;
 use Exam31\Ticket\SomeElementTable;
 
 Loader::includeModule('exam31.ticket');
+Loader::includeModule('ui');
 
 class ExamElementsListComponent extends CBitrixComponent implements Errorable
 {
@@ -75,7 +77,43 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 
         $limit = $navParams['nPageSize'];
 
-		$this->arResult['ITEMS'] = $this->getSomeElementList($page, $limit);
+        // Get filter
+        $filterOption = new Bitrix\Main\UI\Filter\Options(static::GRID_ID);
+        $filterData = $filterOption->getFilter([]);
+        $filter = [];
+
+        if (!empty($filterData['TITLE'])) {
+            $filter['TITLE'] = trim($filterData['TITLE']);
+        }
+
+        // Добавляем фильтр в тулбар
+        Toolbar::addFilter([
+            'FILTER_ID' => static::GRID_ID,
+            'GRID_ID' => static::GRID_ID, // Указываем ID грида, к которому относится фильтр
+            'FILTER' => [
+                [
+                    'id' => 'TITLE',
+                    'name' => Loc::getMessage('EXAM_ELEMENTS_LIST_FILTER_LABEL_TITLE_NAME'),
+                    'type' => 'string'
+                ],
+            ],
+            'ENABLE_LIVE_SEARCH' => true,
+            'ENABLE_LABEL' => true,
+            'RESET_TO_DEFAULT_MODE' => true,
+        ]);
+
+        // Добавляем кнопку в тулбар
+        Toolbar::addButton([
+            //"color" => \Bitrix\UI\Buttons\Color::LIGHT,
+            //"icon" => \Bitrix\UI\Buttons\Icon::DONE,
+            "click" => new \Bitrix\UI\Buttons\JsEvent(
+                "alert('addButton')"
+            ),
+            "text" => Loc::getMessage('EXAM_ELEMENTS_LIST_TOOLBAR_BTN_NAME')
+        ]);
+
+        $this->arResult['TOTAL_ROWS_COUNT'] = $this->totalRowsCount($filter);
+		$this->arResult['ITEMS'] = $this->getSomeElementList($page, $limit, $filter);
 		$this->arResult['grid'] = $this->prepareGrid($this->arResult['ITEMS'], $limit);
 
 		$this->includeComponentTemplate();
@@ -84,12 +122,19 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 		$APPLICATION->SetTitle(Loc::getMessage('EXAM31_ELEMENTS_LIST_PAGE_TITLE'));
 	}
 
-	protected function getSomeElementList(int $page = 1, int $limit = 10): array
+	protected function getSomeElementList(int $page = 1, int $limit = 10, $filter = []): array
 	{
         $offset = $limit * ($page - 1);
 
-        $query = SomeElementTable::query()
-            ->where('ACTIVE', true)
+        $query = SomeElementTable::query();
+
+        if (!empty($filter)) {
+            foreach ($filter as $field => $value) {
+                $query->whereLike($field, "%{$value}%");
+            }
+        }
+
+        $query->where('ACTIVE', true)
             ->addOrder('ID', 'ASC')
             ->setSelect(['ID', 'DATE_MODIFY', 'TITLE', 'TEXT', 'CNT_INFO', 'ACTIVE_LANG'])
             ->setLimit($limit)
@@ -125,11 +170,18 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 		return $preparedItems;
 	}
 
-    protected function totalRowsCount()
+    protected function totalRowsCount($filter = [])
     {
         if (!static::$totalRowsCount) {
-            static::$totalRowsCount = SomeElementTable::query()
-                ->where('ACTIVE', true)
+            $query = SomeElementTable::query();
+
+            if (!empty($filter)) {
+                foreach ($filter as $field => $value) {
+                    $query->whereLike($field, "%{$value}%");
+                }
+            }
+
+            static::$totalRowsCount =  $query->where('ACTIVE', true)
                 ->exec()
                 ->getSelectedRowsCount();
         }

@@ -5,10 +5,7 @@
  * @var array $arParams
  * @var array $arResult
  */
-?>
 
-
-<?
 $APPLICATION->IncludeComponent(
 	'bitrix:main.ui.grid',
 	'',
