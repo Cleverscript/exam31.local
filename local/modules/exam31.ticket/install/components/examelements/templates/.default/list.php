@@ -16,6 +16,7 @@ $APPLICATION->IncludeComponent(
 	[
 		'ELEMENT_ID' => $arResult['VARIABLES']['ELEMENT_ID'] ?? null,
 		'DETAIL_PAGE_URL' => $arResult['DETAIL_PAGE_URL'],
+		'INFO_PAGE_URL' => $arResult['INFO_PAGE_URL'],
 		'LIST_PAGE_URL' => $arResult['LIST_PAGE_URL'],
 	]
 );

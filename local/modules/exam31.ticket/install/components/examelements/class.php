@@ -10,7 +10,8 @@ class SomeElementsComponent extends CBitrixComponent
 	const DEFAULT_PAGE = 'list';
 	const DEFAULT_URL_TEMPLATES = [
 		'list' => '',
-		'detail' => 'detail/#ID#/'
+		'detail' => 'detail/#ID#/',
+		'info' => 'info/#ID#/'
 	];
 
 	public function __construct($component = null)
@@ -33,7 +34,7 @@ class SomeElementsComponent extends CBitrixComponent
 
 		$urlTemplates = $engine->MakeComponentUrlTemplates(
 			static::DEFAULT_URL_TEMPLATES,
-			$this->arParams['SEF_URL_TEMPLATES']
+			$this->arParams['SEF_URL_TEMPLATES'] // сюда попадет все то что в .parameters.php в ключе SEF_MODE
 		);
 
 		$componentPage = $engine->guessComponentPath(
@@ -46,6 +47,7 @@ class SomeElementsComponent extends CBitrixComponent
 			'FOLDER' => $this->arParams['SEF_FOLDER'],
 			'LIST_PAGE_URL' => $this->arParams['SEF_FOLDER'] . $urlTemplates['list'],
 			'DETAIL_PAGE_URL' => $this->arParams['SEF_FOLDER'] . $urlTemplates['detail'],
+			'INFO_PAGE_URL' => $this->arParams['SEF_FOLDER'] . $urlTemplates['info'],
 			'VARIABLES' => $variables,
 		];
 

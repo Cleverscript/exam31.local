@@ -115,7 +115,7 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 		foreach ($items as $item)
 		{
 			$item['DETAIL_URL'] = $this->getDetailPageUrl($item['ID']);
-			$item['INFO_URL'] = $this->getDetailPageUrl($item['ID']);
+			$item['INFO_URL'] = $this->getInfoPageUrl($item['ID']);
 			$item['DATE_MODIFY'] = $item['DATE_MODIFY'] instanceof DateTime
 				? $item['DATE_MODIFY']->toString()
 				: null;
@@ -215,7 +215,7 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
 	}
     protected function getInfoPageUrl(int $id): string
     {
-        return str_replace('#ELEMENT_ID#', $id, $this->arParams['DETAIL_PAGE_URL']);
+        return str_replace('#ELEMENT_ID#', $id, $this->arParams['INFO_PAGE_URL']);
     }
 	protected function getDetailHTMLLink(string $detail_url): string
 	{
