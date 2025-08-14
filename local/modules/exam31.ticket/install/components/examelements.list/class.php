@@ -266,6 +266,9 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
                             width: 1100,
                             cacheable: true,
                             autoFocus: true,
+                            label: {
+                                text: '" . Loc::getMessage('EXAM31_ELEMENTS_LIST_GRID_SLIDER_DETAIL_LABEL') . "',
+                            }
                         })",
                     ],
                     [
@@ -278,9 +281,9 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
                             cacheable: true,
                             autoFocus: true,
                             label: {
-                                text: 'Моя этикетка',
+                                text: '" . Loc::getMessage('EXAM31_ELEMENTS_LIST_GRID_SLIDER_INFO_LABEL') . "',
                                 color: '#FFFFFF',
-                                bgColor: '#2FC6F6',
+                                bgColor: '#a4eba7',
                             }
                         })",
                     ],
