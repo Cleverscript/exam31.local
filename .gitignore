@@ -5,3 +5,6 @@
 /bitrix
 /test
 /local/php_interface
+/local/vendor
+/local/composer.json
+/local/composer.lock
