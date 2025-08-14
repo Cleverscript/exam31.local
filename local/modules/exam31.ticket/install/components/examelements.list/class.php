@@ -268,6 +268,11 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
                             autoFocus: true,
                             label: {
                                 text: '" . Loc::getMessage('EXAM31_ELEMENTS_LIST_GRID_SLIDER_DETAIL_LABEL') . "',
+                            },
+                            events: {
+                                onClose: function(event) {
+                                    alert('onClose');
+                                }
                             }
                         })",
                     ],
@@ -284,6 +289,11 @@ class ExamElementsListComponent extends CBitrixComponent implements Errorable
                                 text: '" . Loc::getMessage('EXAM31_ELEMENTS_LIST_GRID_SLIDER_INFO_LABEL') . "',
                                 color: '#FFFFFF',
                                 bgColor: '#a4eba7',
+                            },
+                            events: {
+                                onClose: function(event) {
+                                    alert('onClose');
+                                }
                             }
                         })",
                     ],
